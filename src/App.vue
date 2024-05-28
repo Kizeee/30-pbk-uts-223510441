@@ -1,127 +1,93 @@
 <template>
   <div id="app">
-    <h1>Daftar Kegiatan</h1>
-    <div class="input-container">
-      <input type="text" v-model="newActivity" placeholder="Tambahkan kegiatan baru...">
-      <button @click="addActivity">Tambah</button>
-    </div>
-
-    <ul v-if="!showingPosts">
-      <li v-for="(activity, index) in filteredActivities" :key="index" class="activity-item">
-        <span v-if="index !== editingIndex" :class="{ completed: activity.completed }">{{ activity.name }}</span>
-        <input v-else type="text" v-model="editedActivityName" @keyup.enter="saveEdit" @keyup.esc="cancelEdit">
-        <div>
-          <button @click="toggleCompletion(index)" class="action-button">{{ activity.completed ? 'Batal Checklist' : 'Checklist' }}</button>
-          <button @click="editActivity(index)" class="action-button">{{ index === editingIndex ? 'Simpan' : 'Edit' }}</button>
-          <button @click="removeActivity(index)" class="action-button">Hapus</button>
-        </div>
-      </li>
-    </ul>
-
-    <div class="filter-container" v-if="!showingPosts">
-      <input type="checkbox" id="showOnlyPending" v-model="showOnlyPending">
-      <label for="showOnlyPending">Tampilkan hanya kegiatan yang belum selesai</label>
-    </div>
-
-    <button @click="showPostsView" v-if="!showingPosts">Tampilkan Postingan</button>
-
-    <div v-if="showingPosts">
-      <h1>Postingan</h1>
-      <select v-model="selectedUser">
-        <option value="">Select user</option>
-        <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-      </select>
-      <ul v-if="selectedUser">
-        <li v-for="post in posts" :key="post.id">{{ post.title }}</li>
-      </ul>
-    </div>
-    
-    <button @click="showTodosView" v-if="showingPosts">Tampilkan Daftar Kegiatan</button>
+    <Header @toggle-view="toggleView" />
+    <Todos
+      v-if="!showingPosts"
+      :activities="activities"
+      :showOnlyPending="showOnlyPending"
+      @add-activity="addActivity"
+      @toggle-completion="toggleCompletion"
+      @remove-activity="removeActivity"
+      @edit-activity="editActivity"
+    />
+    <Posts
+      v-else
+      :users="users"
+      :selectedUser="selectedUser"
+      :posts="posts"
+      @select-user="selectUser"
+    />
   </div>
 </template>
 
 <script>
+import Header from "./components/Header.vue";
+import Todos from "./components/Todos.vue";
+import Posts from "./components/Posts.vue";
+
 export default {
+  components: {
+    Header,
+    Todos,
+    Posts,
+  },
   data() {
     return {
-      newActivity: '',
-      editedActivityName: '',
-      editingIndex: -1,
       activities: [],
       showOnlyPending: false,
       showingPosts: false,
       selectedUser: null,
       users: [],
-      posts: []
+      posts: [],
     };
   },
   methods: {
-    addActivity() {
-      if (this.newActivity.trim() !== '') {
-        this.activities.push({ name: this.newActivity, completed: false });
-        this.newActivity = '';
-      }
-    },
-    removeActivity(index) {
-      this.activities.splice(index, 1);
+    addActivity(newActivity) {
+      this.activities.push(newActivity);
     },
     toggleCompletion(index) {
       this.activities[index].completed = !this.activities[index].completed;
     },
-    editActivity(index) {
-      this.editedActivityName = this.activities[index].name;
-      this.editingIndex = index;
+    removeActivity(index) {
+      this.activities.splice(index, 1);
     },
-    saveEdit() {
-      if (this.editedActivityName.trim() !== '') {
-        this.activities[this.editingIndex].name = this.editedActivityName;
-        this.cancelEdit();
-      }
-    },
-    cancelEdit() {
-      this.editedActivityName = '';
-      this.editingIndex = -1;
+    editActivity({ index, newName }) {
+      this.activities[index].name = newName;
     },
     async fetchUsers() {
       try {
-        const response = await fetch('https://jsonplaceholder.typicode.com/users');
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
         const data = await response.json();
         this.users = data;
       } catch (error) {
-        console.error('Error Fetching Users:', error);
+        console.error("Error fetching users:", error);
       }
     },
-    async fetchPosts() {
-      if (!this.selectedUser) return;
+    async fetchPosts(userId) {
+      if (!userId) return;
       try {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/posts?userId=${this.selectedUser}`);
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/posts?userId=${userId}`
+        );
         const data = await response.json();
         this.posts = data;
       } catch (error) {
-        console.error('Error Fetching Posts:', error);
+        console.error("Error fetching posts:", error);
       }
     },
-    showPostsView() {
-      this.showingPosts = true;
-      this.fetchUsers();
+    selectUser(userId) {
+      this.selectedUser = userId;
+      this.fetchPosts(userId);
     },
-    showTodosView() {
-      this.showingPosts = false;
-    }
+    toggleView(view) {
+      this.showingPosts = view === "post";
+    },
   },
-  watch: {
-    selectedUser() {
-      this.fetchPosts();
-    }
+  mounted() {
+    this.fetchUsers();
   },
-  computed: {
-    filteredActivities() {
-      if (this.showOnlyPending) {
-        return this.activities.filter(activity => !activity.completed);
-      }
-      return this.activities;
-    }
-  }
 };
 </script>
 
