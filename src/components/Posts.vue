@@ -45,7 +45,7 @@ watch(localSelectedUser, (newValue) => {
 
 h1 {
   text-align: center;
-  color: #cccddb;
+  color: #000002;
 }
 
 .input-container {

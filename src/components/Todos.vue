@@ -1,157 +1,125 @@
 <template>
-  <div>
-    <h1>Daftar Kegiatan</h1>
+  <div class="todos">
+    <h2>Todos</h2>
     <div class="input-container">
-      <input
-        type="text"
-        v-model="newActivity"
-        placeholder="Tambahkan kegiatan baru..."
-      />
-      <button @click="addNewActivity">Tambah</button>
+      <input v-model="newActivity" placeholder="Add new activity" />
+      <button @click="addNewActivity">Add Activity</button>
     </div>
-
     <ul>
       <li
         v-for="(activity, index) in filteredActivities"
         :key="index"
-        class="activity-item"
+        :class="{ completed: activity.completed }"
       >
-        <span
-          v-if="index !== editingIndex"
-          :class="{ completed: activity.completed }"
-          >{{ activity.name }}</span
-        >
-        <input
-          v-else
-          type="text"
-          v-model="editedActivityName"
-          @keyup.enter="saveEdit"
-          @keyup.esc="cancelEdit"
-        />
-        <div>
-          <button
-            @click="$emit('toggle-completion', index)"
-            class="action-button"
-          >
-            {{ activity.completed ? "Batal Checklist" : "Checklist" }}
-          </button>
-          <button @click="editActivity(index)" class="action-button">
-            {{ index === editingIndex ? "Simpan" : "Edit" }}
-          </button>
-          <button
-            @click="$emit('remove-activity', index)"
-            class="action-button"
-          >
-            Hapus
-          </button>
-        </div>
+        {{ activity.name }}
+        <button @click="toggleCompletion(index)">Checklist</button>
+        <button @click="removeActivity(index)">Remove</button>
+        <button @click="editActivity(index)">Edit</button>
       </li>
     </ul>
-
     <div class="filter-container">
-      <input
-        type="checkbox"
-        id="showOnlyPending"
-        v-model="localShowOnlyPending"
-      />
-      <label for="showOnlyPending"
-        >Tampilkan hanya kegiatan yang belum selesai</label
-      >
+      <label>
+        <input
+          type="checkbox"
+          :checked="showOnlyPending"
+          @change="updateShowOnlyPending"
+        />
+        Show Only Pending
+      </label>
     </div>
   </div>
 </template>
 
-<script setup>
-import { defineProps, ref, computed, defineEmits, watch } from "vue";
-
-const props = defineProps({
-  activities: Array,
-  showOnlyPending: Boolean,
-});
-
-const emit = defineEmits([
-  "add-activity",
-  "toggle-completion",
-  "remove-activity",
-  "edit-activity",
-]);
-
-const newActivity = ref("");
-const editedActivityName = ref("");
-const editingIndex = ref(-1);
-const localShowOnlyPending = ref(props.showOnlyPending);
-
-const addNewActivity = () => {
-  if (newActivity.value.trim() !== "") {
-    emit("add-activity", { name: newActivity.value, completed: false });
-    newActivity.value = "";
-  }
+<script>
+export default {
+  props: {
+    activities: Array,
+    showOnlyPending: Boolean,
+  },
+  data() {
+    return {
+      newActivity: "",
+    };
+  },
+  computed: {
+    filteredActivities() {
+      console.log("Computed: showOnlyPending:", this.showOnlyPending);
+      return this.showOnlyPending
+        ? this.activities.filter((activity) => !activity.completed)
+        : this.activities;
+    },
+  },
+  methods: {
+    addNewActivity() {
+      if (this.newActivity.trim()) {
+        this.$emit("add-activity", {
+          name: this.newActivity,
+          completed: false,
+        });
+        this.newActivity = "";
+      }
+    },
+    toggleCompletion(index) {
+      this.$emit("toggle-completion", index);
+    },
+    removeActivity(index) {
+      this.$emit("remove-activity", index);
+    },
+    editActivity(index) {
+      const newName = prompt(
+        "Edit activity name:",
+        this.activities[index].name
+      );
+      if (newName !== null && newName.trim()) {
+        this.$emit("edit-activity", { index, newName });
+      }
+    },
+    updateShowOnlyPending(event) {
+      console.log("Update Show Only Pending:", event.target.checked);
+      this.$emit("update:showOnlyPending", event.target.checked);
+    },
+  },
 };
-
-const editActivity = (index) => {
-  editedActivityName.value = props.activities[index].name;
-  editingIndex.value = index;
-};
-
-const saveEdit = () => {
-  if (editedActivityName.value.trim() !== "") {
-    emit("edit-activity", {
-      index: editingIndex.value,
-      newName: editedActivityName.value,
-    });
-    cancelEdit();
-  }
-};
-
-const cancelEdit = () => {
-  editedActivityName.value = "";
-  editingIndex.value = -1;
-};
-
-const filteredActivities = computed(() => {
-  if (localShowOnlyPending.value) {
-    return props.activities.filter((activity) => !activity.completed);
-  }
-  return props.activities;
-});
-
-watch(localShowOnlyPending, (newValue) => {
-  emit("update:showOnlyPending", newValue);
-});
 </script>
 
 <style scoped>
-#app {
-  font-family: Arial, sans-serif;
-  max-width: 600px;
-  margin: 0 auto;
+.todos {
+  background-color: #fff;
   padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  text-align: center;
-  color: #cccddb;
+h2 {
+  margin-bottom: 20px;
+  color: #000000;
 }
 
 .input-container {
-  margin-bottom: 10px;
   display: flex;
-  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .input-container input {
-  padding: 8px;
-  font-size: 16px;
-  margin-bottom: 10px;
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .input-container button {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background-color: #007bff;
   color: #fff;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.input-container button:hover {
+  background-color: #0056b3;
 }
 
 ul {
@@ -159,15 +127,15 @@ ul {
   padding: 0;
 }
 
-.activity-item {
+li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ccc;
-  padding: 10px 0;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }
 
-.activity-item:last-child {
+li:last-child {
   border-bottom: none;
 }
 
@@ -180,17 +148,7 @@ ul {
   margin-top: 20px;
 }
 
-.action-button {
-  padding: 6px 12px;
-  margin-left: 5px;
-  background-color: #333;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.action-button:hover {
-  background-color: #555;
+.filter-container label {
+  color: #444;
 }
 </style>
