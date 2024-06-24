@@ -1,3 +1,4 @@
+<!-- src/components/Todos.vue -->
 <template>
   <div class="todos">
     <h2>Todos</h2>
@@ -43,7 +44,6 @@ export default {
   },
   computed: {
     filteredActivities() {
-      console.log("Computed: showOnlyPending:", this.showOnlyPending);
       return this.showOnlyPending
         ? this.activities.filter((activity) => !activity.completed)
         : this.activities;
@@ -75,7 +75,6 @@ export default {
       }
     },
     updateShowOnlyPending(event) {
-      console.log("Update Show Only Pending:", event.target.checked);
       this.$emit("update:showOnlyPending", event.target.checked);
     },
   },

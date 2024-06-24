@@ -1,8 +1,9 @@
+<!-- src/components/Header.vue -->
 <template>
   <header>
     <router-link to="/">Todos</router-link>
     <router-link to="/posts">Posts</router-link>
-    <router-link to="/album">Album</router-link>
+    <router-link to="/albums">Albums</router-link>
   </header>
 </template>
 

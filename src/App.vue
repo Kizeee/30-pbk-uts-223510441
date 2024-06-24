@@ -1,3 +1,4 @@
+<!-- src/App.vue -->
 <template>
   <div id="app">
     <Header />
@@ -49,11 +50,13 @@ export default {
     },
     async fetchUsers() {
       try {
+        console.log("Fetching users...");
         const response = await fetch(
           "https://jsonplaceholder.typicode.com/users"
         );
         const data = await response.json();
         this.users = data;
+        console.log("Users fetched:", this.users);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -71,8 +74,8 @@ export default {
       }
     },
     selectUser(userId) {
-      this.selectedUser = userId;
-      this.fetchPosts(userId);
+      this.selectedUser = userId.toString(); // Ensure the selected user ID is a string
+      this.fetchPosts(this.selectedUser);
     },
   },
   mounted() {

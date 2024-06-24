@@ -1,9 +1,10 @@
+<!-- src/components/Post.vue -->
 <template>
   <div>
     <h1>Postingan</h1>
     <select v-model="localSelectedUser" @change="selectUser">
       <option value="">Pilih pengguna</option>
-      <option v-for="user in users" :key="user.id" :value="user.id">
+      <option v-for="user in users" :key="user.id" :value="user.id.toString()">
         {{ user.name }}
       </option>
     </select>
@@ -14,11 +15,11 @@
 </template>
 
 <script setup>
-import { defineProps, ref, watch } from "vue";
+import { defineProps, ref, watch, onMounted } from "vue";
 
 const props = defineProps({
   users: Array,
-  selectedUser: String,
+  selectedUser: String, // Expecting a string
   posts: Array,
 });
 
@@ -32,6 +33,10 @@ const selectUser = (event) => {
 
 watch(localSelectedUser, (newValue) => {
   emit("select-user", newValue);
+});
+
+onMounted(() => {
+  console.log("Users prop:", props.users);
 });
 </script>
 

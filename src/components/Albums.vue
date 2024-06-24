@@ -1,34 +1,29 @@
+<!-- src/components/Albums.vue -->
 <template>
   <div class="album">
-    <h2>Album</h2>
+    <h2>Albums</h2>
     <ul>
-      <li v-for="photo in photos" :key="photo.id">
-        <img :src="photo.thumbnailUrl" :alt="photo.title" />
-        <p>{{ photo.title }}</p>
+      <li v-for="album in albums" :key="album.id">
+        <router-link :to="{ name: 'Photos', params: { id: album.id } }">{{
+          album.title
+        }}</router-link>
       </li>
     </ul>
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      photos: [],
-    };
-  },
-  async created() {
-    try {
-      const response = await fetch(
-        "https://jsonplaceholder.typicode.com/photos?albumId=1"
-      );
-      const data = await response.json();
-      this.photos = data;
-    } catch (error) {
-      console.error("Error fetching photos:", error);
-    }
-  },
-};
+<script setup>
+import { onMounted, computed } from "vue";
+import { useAlbumStore } from "../stores/album";
+
+const albumStore = useAlbumStore();
+
+onMounted(() => {
+  console.log("Fetching albums...");
+  albumStore.fetchAlbums();
+});
+
+const albums = computed(() => albumStore.albums);
 </script>
 
 <style scoped>
